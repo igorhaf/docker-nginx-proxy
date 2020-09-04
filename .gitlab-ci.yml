@@ -1,0 +1,24 @@
+image: docker:latest
+services:
+  - docker:dind
+
+stages:
+  - deploy
+
+step-deploy-production:
+  stage: deploy
+  before_script:
+    - export DYNAMIC_ENV_VAR=PRODUCTION
+  only:
+    - master
+  tags:
+    - master
+  script:
+    - echo setting up env $DYNAMIC_ENV_VAR
+    - sudo apt-get install -y python-pip
+    - sudo pip install docker-compose
+    - sudo docker-compose down
+    - sudo docker image prune -f
+    - sudo docker network inspect nginx-proxy >/dev/null 2>&1 || sudo docker network create nginx-proxy
+    - sudo docker-compose -f docker-compose.yml build --no-cache
+    - sudo docker-compose -f docker-compose.yml up -d
